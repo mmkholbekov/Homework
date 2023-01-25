@@ -1,52 +1,33 @@
 from aiogram import Bot, Dispatcher, types
+from aiogram.dispatcher.filters import Text
 from aiogram.utils import executor
-from decouple import config
+from dotenv import load_dotenv
+from os import getenv
 import logging
-
-TOKEN = config("TOKEN")
-
-bot = Bot(TOKEN)
-dp = Dispatcher(bot)
-
-
-@dp.message_handler(commands=["start"])
-async def echo(message: types.Message):
-    await message.answer(text=f'Салам алейкум {message.from_user.first_name},я бот группы Python 25-3')
+from handler.start import start_command
+from handler.help import help_command
+from handler.pictures import image_sender
+from handler.shop import shop_start
+from handler.all_message import echo
+from handler.shop_categories import show_phones
 
 
 
-@dp.message_handler(commands="help")
-async def echo(message: types.Message):
-    await message.answer(text=f'Список команд: /start-Начало беседы с ботом, /help-Список команд с коротким описанием, /myinfo-Получить информацию о себе, /picture-Показать случайную картинку')
-    await message.delete()
+if __name__ == "__main__":
+    # Наш бот
+    load_dotenv()  # берем переменные окруженя из .env
+    bot = Bot(getenv('BOT_TOKEN'))
+    # Диспетчер, получает сообщения, обрабатывает через обработчик
+    dp = Dispatcher(bot)
 
+    # Регистрируем обработчики
+    dp.register_message_handler(start_command, commands=['start'])
+    dp.register_message_handler(help_command, commands=['help'])
+    dp.register_message_handler(image_sender, commands=['picture'])
+    dp.register_callback_query_handler(shop_start, text='shop_start')
+    dp.register_message_handler(show_phones, Text(equals='Хочу смартфон'))
 
-@dp.message_handler(commands="myinfo")
-async def echo(message: types.Message):
-    await message.answer(text=f'Ваш id-{message.from_user.id}, ваш nickname-{message.from_user.first_name}, ваш username-{message.from_user.username}')
-    await message.delete()
-
-
-@dp.message_handler(commands="picture")
-async def echo(message: types.Message):
-    await message.answer_photo(
-        open('./media/dog.png', 'rb'),
-        caption="Профессор Спайк"
-    )
-    await message.delete()
-
-
-
-@dp.message_handler()
-async def echo(message: types.Message):
-    await message.answer(text=message.text.upper())
-
-@dp.message_handler()
-async def echo(message: types.Message):
-    print(message)
-    await message.answer(message.from_user.id, message.text)
-
-
-if __name__ == '__main__':
+    # Всегда в конце
+    dp.register_message_handler(echo)
     logging.basicConfig(level=logging.INFO)
     executor.start_polling(dp, skip_updates=True)
