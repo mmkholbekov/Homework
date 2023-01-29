@@ -1,5 +1,5 @@
 from aiogram import types
-from handler.constant import HELP_TEXT
+from handlers.constants import HELP_TEXT
 
 
 async def help_command(message: types.Message):
